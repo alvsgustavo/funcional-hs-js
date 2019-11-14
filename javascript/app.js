@@ -6,51 +6,118 @@
  * @author Gustavo Alves
  */
 
-function filterByYear (transaction, year) {
+const INCOME = 1;
+const EXPENSE = 2;
+const NET_INCOME = 3;
+const defaultReducer = (acc, start) => acc.valor + start;
+
+function filterByYear (transactions, year) {
+  return transactions.filter(t => t.data.year == year);
+};
+
+function filterByMonth (transactions, year, month) {
+  return transactions.filter(t => t.data.year == year && t.data.month == month);
+};
+
+function income (transactions, year, month) {
+  const filtered = getNetIncomeTransactionsByMonth(transactions, year, month, INCOME);
+  return filtered.reduce(defaultReducer);
+};
+
+function expenses (transactions, year, month) {
+  const filtered = getNetIncomeTransactionsByMonth(transactions, year, month, EXPENSE);
+  return filtered.reduce(defaultReducer);
+};
+
+function netIncome (transactions, year, month) {
+  const filtered = getNetIncomeTransactionsByMonth(transactions, year, month, NET_INCOME);
+  return filtered.reduce(defaultReducer);
+};
+
+function balance (transactions, year, month) {
+  const initialBalance = transactions.filter(t => {
+    return t.data.year == year &&
+      t.data.month == month &&
+      t.data.day == 1 &&
+      t.tipos.includes('SALDO_CORRENTE');
+  })[0].valor;
+
+  return initialBalance + netIncome(transactions, year, month);
+};
+
+function maximumBalance (transactions, year, month) {
+  // TODO
+
+};
+
+function minimumBalance (transactions, year, month) {
   // TODO
 };
 
-function filterByMonth (transaction, year, month) {
+function averageIncome (transactions, year) {
+  const filtered = getNetIncomeTransactions(transactions, year, INCOME);
+  const total = filtered.reduce(defaultReducer);
+  const average = total / 12;
+  return average;
+};
+
+function averageExpenses (transactions, year) {
+  const filtered = getNetIncomeTransactions(transactions, year, EXPENSE);
+  const total = filtered.reduce(defaultReducer);
+  const average = total / 12;
+  return average;
+};
+
+function averageNetIncome (transactions, year, month) {
+  const filtered = getNetIncomeTransactions(transactions, year, NET_INCOME);
+  const total = filtered.reduce(defaultReducer);
+  const average = total / 12;
+  return average;
+};
+
+function cashFlow (transactions, year, month) {
   // TODO
 };
 
-function income (transaction, year, month) {
-  // TODO
+function getNetIncomeTransactionsByMonth (transactions, year, month, type) {
+  const result = transactions.filter(t => {
+    return t.data.year == year &&
+      t.data.month == month &&
+      isIt(type, t.valor) &&
+      !t.tipos.includes('SALDO_CORRENTE') &&
+      !t.tipos.includes('APLICACAO') &&
+      !t.tipos.includes('VALOR_APLICACAO');
+  });
+  return result;
 };
 
-function expenses (transaction, year, month) {
-  // TODO
+function getNetIncomeTransactionsByYear (transactions, year, type) {
+  const result = transactions.filter(t => {
+    return t.data.year == year &&
+      isIt(type, t.valor) &&
+      !t.tipos.includes('SALDO_CORRENTE') &&
+      !t.tipos.includes('APLICACAO') &&
+      !t.tipos.includes('VALOR_APLICACAO');
+  });
+  return result;
 };
 
-function netIncome (transaction, year, month) {
-  // TODO
-};
+function isIt(type, value) {
+  let result = undefined;
 
-function balance (transaction, year, month) {
-  // TODO
-};
+  switch (operator) {
+    case INCOME:
+      result = value >= 0;
+      break;
 
-function maximumBalance (transaction, year, month) {
-  // TODO
-};
+    case EXPENSE:
+      result = value < 0;
+      break;
 
-function minimumBalance (transaction, year, month) {
-  // TODO
-};
-
-function averageIncome (transaction, year) {
-  // TODO
-};
-
-function averageExpenses (transaction, year) {
-  // TODO
-};
-
-function averageNetIncome (transaction, year, month) {
-  // TODO
-};
-
-function cashFlow (transaction, year, month) {
-  // TODO
+    case NET_INCOME:
+      result = true;
+      break;
+  }
+  return result;
 };
 
