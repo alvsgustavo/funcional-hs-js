@@ -1,0 +1,16 @@
+{
+  "data": {
+    "year": "int",
+    "month": "int",
+    "dayOfMonth": "int",
+    "hourOfDay": "int",
+    "minute": "int",
+    "second": "int"},
+  "textoIdentificador": "string",
+  "valor": "float",
+  "descricao": "string",
+  "numeroDoc": "int e string",
+  "classificada": "boolean",
+  "tipos": "list of strings",
+  "arquivos": "list of ???"
+}

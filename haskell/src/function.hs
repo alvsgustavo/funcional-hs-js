@@ -2,21 +2,46 @@
 -- 
 -- @author Gustavo Alves
 
+--import Transaction
+
 main = undefined
 
-data Transaction = Int
+data Date = Date { year :: Int
+                 , month :: Int
+                 , day :: Int
+                 } deriving (Show, Eq)
+
+data Transaction = Transaction { date :: Date
+                               , textoIdentificador :: String
+                               , valor :: Float
+                               , descricao :: String
+                               , numeroDOC :: String
+                               , classificada :: Bool
+                               , tipos :: [TransactionType]
+                               , arquivos :: [String]
+                               } deriving (Eq, Show)
+
+data TransactionType = SALDO_CORRENTE | VALOR_APLICACAO |
+                       RECEITA_OPERACIONAL | TAXA_CONDOMINIO |
+                       TAXA_EXTRA | TAXA_SALAO_FESTA |
+                       MULTA_JUROS | TAXA_AGUA |
+                       RECUPERACAO_ATIVOS | MULTA_JURO_CORRECAO_COBRANCA |
+                       OUTRAS_RECEITAS | DESPESAS_PESSOAL |
+                       TERCEIRIZACAO_FUNCIONARIOS | VIGILANCIA |
+                       SALARIO_FUNCIONARIOS_ORGANICOS | ADIANTAMENTO_SALARIAL_FUNCIONARIOS_ORGANICOS |
+                       FERIAS | INSS deriving (Eq, Show)
 
 -- Filter transactions by year
 filterByYear :: [Transaction] -> Int -> [Transaction]
-filterByYear = undefined
+filterByYear ts y = filter (\x -> (year . date) x == y) ts
 
 -- Filter transactions by month and year
 filterByYearMonth :: [Transaction] -> Int -> Int -> [Transaction]
-filterByYearMonth = undefined
+filterByYearMonth xs y m = filter (\x -> (month . date) x == m && (year . date) x == y) xs  
 
 -- Calculate income by month and year
 income :: [Transaction] -> Int -> Int -> Float
-income = undefined
+income xs y m = 
 
 -- Calculate expenses by month and year
 expenses :: [Transaction] -> Int -> Int -> Float
