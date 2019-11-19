@@ -3,6 +3,7 @@
 -- @author Gustavo Alves
 
 --import Transaction
+import Data.List
 
 main = undefined
 
@@ -55,7 +56,7 @@ netIncome ts y m = foldl (+) 0 $ map valor $ filterByYearMonth ts y m
 
 -- Calculate balance by month and year
 balance :: [Transaction] -> Int -> Int -> Float
-balance = undefined
+balance ts y m = initialBalance ts y m + netIncome ts y m
 
 -- Calculate maximum balance in a specified month and year
 maximumBalance :: [Transaction] -> Int -> Int -> Float
@@ -67,11 +68,11 @@ minimumBalance = undefined
 
 -- Calculate average income by year
 averageIncome :: [Transaction] -> Int -> Float
-averageIncome = undefined
+averageIncome ts y = (foldl (+) 0 $ [valor t | t <- (filterByYear ts y), valor t > 0]) / 12
 
 -- Calculate average expenses by year
 averageExpenses :: [Transaction] -> Int -> Float
-averageExpenses = undefined
+averageExpenses ts y = (foldl (+) 0 $ [valor t | t <- (filterByYear ts y), valor t < 0]) / 12
 
 -- Calculate average net income by year
 averageNetIncome :: [Transaction] -> Int -> Float
@@ -95,3 +96,10 @@ validTransaction t = let saldoCorrenteCheck = SALDO_CORRENTE `elem` (tipos t)
                          aplicacaoCheck = APLICACAO `elem` (tipos t)
                          valorAplicacaoCheck = VALOR_APLICACAO `elem` (tipos t)
                      in saldoCorrenteCheck && aplicacaoCheck && valorAplicacaoCheck
+
+initialBalance :: [Transaction] -> Int -> Int -> Float
+initialBalance ts y m = let result = find (\t -> checkYear t y && checkMonth t m && (day . date) t == 1 && SALDO_CORRENTE `elem` (tipos t)) ts
+                        in case result of
+                          Just x -> valor x
+                          otherwise -> error "This wasn't supposed to happen"
+
