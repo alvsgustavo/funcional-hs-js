@@ -60,11 +60,11 @@ balance ts y m = initialBalance ts y m + netIncome ts y m
 
 -- Calculate maximum balance in a specified month and year
 maximumBalance :: [Transaction] -> Int -> Int -> Float
-maximumBalance = undefined
+maximumBalance ts y m = maximum $ map (snd) $ cashFlow ts y m
 
 -- Calculate minimum balance in a specified month and year
 minimumBalance :: [Transaction] -> Int -> Int -> Float
-minimumBalance = undefined
+minimumBalance ts y m = minimum $ map (snd) $ cashFlow ts y m
 
 -- Calculate average income by year
 averageIncome :: [Transaction] -> Int -> Float
@@ -79,8 +79,11 @@ averageNetIncome :: [Transaction] -> Int -> Float
 averageNetIncome ts y = (foldl (+) 0 $ map valor $ filterByYear ts y) / 12
 
 -- Return cash flow in a specified month/year
-cashFlow :: [Transaction] -> Int -> Float
-cashFlow = undefined
+cashFlow :: [Transaction] -> Int -> Int -> [(Int, Float)]
+cashFlow ts y m = [(d, dailyBalance d) | d <- [1..daysInMonth+1]]
+                  where
+                    daysInMonth = (maximum . nub) $ map (day . date) $ filter (\t -> checkYear t y && checkMonth t m) ts
+                    dailyBalance d = foldl (+) (initialBalance ts y m) $ map valor $ filter (\t -> checkYear t y && checkYear t m && (day . date) t <= d && validTransaction t) ts 
 
 -- Auxiliary functions
 --
@@ -90,6 +93,9 @@ checkYear t y = (year . date) t == y
 
 checkMonth :: Transaction -> Int -> Bool
 checkMonth t m = (month . date) t == m
+
+checkDay :: Transaction -> Int -> Bool
+checkDay t d = (day . date) t == d
 
 validTransaction :: Transaction -> Bool
 validTransaction t = let saldoCorrenteCheck = SALDO_CORRENTE `elem` (tipos t)
@@ -101,5 +107,5 @@ initialBalance :: [Transaction] -> Int -> Int -> Float
 initialBalance ts y m = let result = find (\t -> checkYear t y && checkMonth t m && (day . date) t == 1 && SALDO_CORRENTE `elem` (tipos t)) ts
                         in case result of
                           Just x -> valor x
-                          otherwise -> error "This wasn't supposed to happen"
+                          Nothing -> error "This wasn't supposed to happen"
 
