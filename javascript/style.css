@@ -1,0 +1,26 @@
+* {
+  font-family: sans-serif;
+  margin: 0px;
+}
+
+p {
+  margin: 10px;
+}
+
+form {
+  display: inline;
+  padding: 20px;
+}
+
+.result-row {
+  border: 1px solid black;
+  display: flex;
+  min-width: 100vh;
+  margin: 3px;
+}
+.att {
+  display: inline;
+  color: black;
+  left-margin: 10px;
+  
+}

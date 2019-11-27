@@ -1,16 +1,23 @@
--- Functions implemented in Haskell
-{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
+{-# LANGUAGE OverloadedStrings, DeriveGeneric #-}
 
-import GHC.Generics
+import qualified Data.ByteString.Lazy as B
 import Data.Aeson
 import Data.List
+import GHC.Generics
 
 main = undefined
 
+get :: IO [Transaction]
+get = do
+  d <- (eitherDecode <$> getJSON) :: IO (Either String [Transaction])
+  case d of
+    Left err -> error "Erro ao decodificar"
+    Right ts -> return ts
+
 data Date = Date { year :: Int
                  , month :: Int
-                 , day :: Int
-                 } deriving (Show, Eq, Generic, ToJSON, FromJSON)
+                 , dayOfMonth :: Int
+                 } deriving (Show, Generic)
 
 data Transaction = Transaction { date :: Date
                                , textoIdentificador :: String
@@ -18,28 +25,31 @@ data Transaction = Transaction { date :: Date
                                , descricao :: String
                                , numeroDOC :: String
                                , classificada :: Bool
-                               , tipos :: [TransactionType]
+                               , tipos :: [String]
                                , arquivos :: [String]
-                               } deriving (Eq, Show, Generic, toJSON, FromJSON)
+                               } deriving (Show, Generic)
 
-data TransactionType = SALDO_CORRENTE | VALOR_APLICACAO |
-                       RECEITA_OPERACIONAL | TAXA_CONDOMINIO |
-                       TAXA_EXTRA | TAXA_SALAO_FESTA |
-                       MULTA_JUROS | TAXA_AGUA |
-                       RECUPERACAO_ATIVOS | MULTA_JURO_CORRECAO_COBRANCA |
-                       OUTRAS_RECEITAS | DESPESAS_PESSOAL |
-                       TERCEIRIZACAO_FUNCIONARIOS | VIGILANCIA |
-                       SALARIO_FUNCIONARIOS_ORGANICOS | ADIANTAMENTO_SALARIAL_FUNCIONARIOS_ORGANICOS |
-                       FERIAS | INSS | APLICACAO deriving (Eq, Show, Generic, toJSON, FromJSON)
+
+instance FromJSON Date
+instance ToJSON Date
+instance FromJSON Transaction
+instance ToJSON Transaction
+
+
+jsonFile :: FilePath
+jsonFile = "../../data/dataset.json"
+
+getJSON :: IO B.ByteString
+getJSON = B.readFile jsonFile
 
 
 -- Filter transactions by year
 filterByYear :: [Transaction] -> Int -> [Transaction]
-filterByYear ts y = filter (\t -> validTransaction t && checkYear t y) ts
+filterByYear ts y = filter (\t -> checkYear t y) ts
 
 -- Filter transactions by month and year
 filterByYearMonth :: [Transaction] -> Int -> Int -> [Transaction]
-filterByYearMonth ts y m = filter (\t -> validTransaction t && checkYear t y && checkMonth t m) ts
+filterByYearMonth ts y m = filter (\t -> checkYear t y && checkMonth t m) ts
 
 -- Calculate income by month and year
 income :: [Transaction] -> Int -> Int -> Float
@@ -77,16 +87,16 @@ averageExpenses ts y = (foldl (+) 0 $ [valor t | t <- (filterByYear ts y), valor
 
 -- Calculate average net income by year
 averageNetIncome :: [Transaction] -> Int -> Float
-averageNetIncome ts y = (foldl (+) 0 $ map valor $ filterByYear ts y) / 12
+averageNetIncome ts y = (foldl (+) 0 $ map valor $ filterByYear ts y) / (12)
 
 -- Return cash flow in a specified month/year
 cashFlow :: [Transaction] -> Int -> Int -> [(Int, Float)]
-cashFlow ts y m = [(d, dailyBalance d) | d <- [1..(1 + (daysInMonth y m))]]
-                  where
-                    dailyBalance d = foldl (+) (initialBalance ts y m) $ map valor $ filter (\t -> checkYear t y && checkYear t m && (day . date) t <= d && validTransaction t) ts 
+cashFlow ts y m = [(d, (initialBalance ts y m) + dailyBalance ts y m d) | d <- [1..(1 + (dayOfMonthsInMonth m))]] 
 
 -- Auxiliary functions
 --
+dailyBalance :: [Transaction] -> Int -> Int -> Int -> Float
+dailyBalance ts y m d = sum $ map (valor) $ filter (\t -> checkYear t y && checkMonth t m && (dayOfMonth . date) t <= d && validTransaction t) ts 
 
 checkYear :: Transaction -> Int -> Bool
 checkYear t y = (year . date) t == y
@@ -94,22 +104,21 @@ checkYear t y = (year . date) t == y
 checkMonth :: Transaction -> Int -> Bool
 checkMonth t m = (month . date) t == m
 
-checkDay :: Transaction -> Int -> Bool
-checkDay t d = (day . date) t == d
+checkdayOfMonth :: Transaction -> Int -> Bool
+checkdayOfMonth t d = (dayOfMonth . date) t == d
 
 validTransaction :: Transaction -> Bool
-validTransaction t = let saldoCorrenteCheck = SALDO_CORRENTE `elem` (tipos t)
-                         aplicacaoCheck = APLICACAO `elem` (tipos t)
-                         valorAplicacaoCheck = VALOR_APLICACAO `elem` (tipos t)
-                     in saldoCorrenteCheck && aplicacaoCheck && valorAplicacaoCheck
+validTransaction t = let saldoCorrenteCheck = "SALDO_CORRENTE" `elem` (tipos t)
+                         aplicacaoCheck = "APLICACAO" `elem` (tipos t)
+                         valorAplicacaoCheck = "VALOR_APLICACAO" `elem` (tipos t)
+                     in not saldoCorrenteCheck && not aplicacaoCheck && not valorAplicacaoCheck
 
 initialBalance :: [Transaction] -> Int -> Int -> Float
-initialBalance ts y m = let result = find (\t -> checkYear t y && checkMonth t m && (day . date) t == 1 && SALDO_CORRENTE `elem` (tipos t)) ts
+initialBalance ts y m = let result = Data.List.find (\t -> checkYear t y && checkMonth t m && (dayOfMonth . date) t == 1 && "SALDO_CORRENTE" `elem` (tipos t)) ts
                         in case result of
                           Just x -> valor x
                           Nothing -> error "This wasn't supposed to happen"
 
-daysInMonth :: Int -> Int -> Int
-daysInMonth y m | m == 1 && (y % 100 != 0 && y % 4 == 0 || y % 400 == 0) = 29
-                | otherwise = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] !! m
+dayOfMonthsInMonth :: Int -> Int
+dayOfMonthsInMonth m = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] !! m
 

@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'/>
+    <title>Trabalho de funcional</title>
+    <script src='script.js'></script>
+    <link rel='stylesheet' href='style.css'/>
+  </head>
+  <body>
+    <form>
+      <label for='ano'>Ano</label>
+      <select id='ano' name='ano'>
+        <option value='2017'>2017</option>
+        <option value='2018'>2018</option>
+        <option value='2019'>2019</option>
+      </select>
+      
+      <label for='mes'>Mês</label>
+      <select id='mes' name='mes'>
+        <option value='00'>Janeiro</option>
+        <option value='01'>Fevereiro</option>
+        <option value='02'>Março</option>
+        <option value='03'>Abril</option>
+        <option value='04'>Maio</option>
+        <option value='05'>Junho</option>
+        <option value='06' selected>Julho</option>
+        <option value='07'>Agosto</option>
+        <option value='08'>Setembro</option>
+        <option value='09'>Outubro</option>
+        <option value='10'>Novembro</option>
+        <option value='11'>Dezembro</option>
+      </select>
+      
+      <label for='op'>Operação</label>
+      <select id='op' name='op'>
+        <option value='fby'>Filtrar transações por ano</option>
+        <option value='fbm'>Filtrar transações por ano e mês</option>
+        <option value='in'>Receita do mês</option>
+        <option value='ex'>Despesas do mês</option>
+        <option value='net' selected>Sobras do mês</option>
+        <option value='bal'>Saldo final do mês</option>
+        <option value='max'>Saldo máximo durante o mês</option>
+        <option value='min'>Saldo mínimo durante o mês</option>
+        <option value='avgi'>Média de receitas durante o ano</option>
+        <option value='avge'>Média de despesas durante o ano</option>
+        <option value='avgn'>Média de sobras durante o ano</option>
+        <option value='flow'>Fluxo de caixa durante o mês</option>
+      </select>
+    </form>
+    <button onclick='execute()'>Vai!</button>
+    <div class='result'></div>
+  </body>
+</html>
+
