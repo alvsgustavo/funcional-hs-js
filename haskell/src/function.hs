@@ -1,8 +1,8 @@
 -- Functions implemented in Haskell
--- 
--- @author Gustavo Alves
+{-# LANGUAGE DeriveGeneric, DeriveAnyClass #-}
 
---import Transaction
+import GHC.Generics
+import Data.Aeson
 import Data.List
 
 main = undefined
@@ -10,7 +10,7 @@ main = undefined
 data Date = Date { year :: Int
                  , month :: Int
                  , day :: Int
-                 } deriving (Show, Eq)
+                 } deriving (Show, Eq, Generic, ToJSON, FromJSON)
 
 data Transaction = Transaction { date :: Date
                                , textoIdentificador :: String
@@ -20,7 +20,7 @@ data Transaction = Transaction { date :: Date
                                , classificada :: Bool
                                , tipos :: [TransactionType]
                                , arquivos :: [String]
-                               } deriving (Eq, Show)
+                               } deriving (Eq, Show, Generic, toJSON, FromJSON)
 
 data TransactionType = SALDO_CORRENTE | VALOR_APLICACAO |
                        RECEITA_OPERACIONAL | TAXA_CONDOMINIO |
@@ -30,7 +30,8 @@ data TransactionType = SALDO_CORRENTE | VALOR_APLICACAO |
                        OUTRAS_RECEITAS | DESPESAS_PESSOAL |
                        TERCEIRIZACAO_FUNCIONARIOS | VIGILANCIA |
                        SALARIO_FUNCIONARIOS_ORGANICOS | ADIANTAMENTO_SALARIAL_FUNCIONARIOS_ORGANICOS |
-                       FERIAS | INSS | APLICACAO deriving (Eq, Show)
+                       FERIAS | INSS | APLICACAO deriving (Eq, Show, Generic, toJSON, FromJSON)
+
 
 -- Filter transactions by year
 filterByYear :: [Transaction] -> Int -> [Transaction]
@@ -80,9 +81,8 @@ averageNetIncome ts y = (foldl (+) 0 $ map valor $ filterByYear ts y) / 12
 
 -- Return cash flow in a specified month/year
 cashFlow :: [Transaction] -> Int -> Int -> [(Int, Float)]
-cashFlow ts y m = [(d, dailyBalance d) | d <- [1..daysInMonth+1]]
+cashFlow ts y m = [(d, dailyBalance d) | d <- [1..(1 + (daysInMonth y m))]]
                   where
-                    daysInMonth = (maximum . nub) $ map (day . date) $ filter (\t -> checkYear t y && checkMonth t m) ts
                     dailyBalance d = foldl (+) (initialBalance ts y m) $ map valor $ filter (\t -> checkYear t y && checkYear t m && (day . date) t <= d && validTransaction t) ts 
 
 -- Auxiliary functions
@@ -108,4 +108,8 @@ initialBalance ts y m = let result = find (\t -> checkYear t y && checkMonth t m
                         in case result of
                           Just x -> valor x
                           Nothing -> error "This wasn't supposed to happen"
+
+daysInMonth :: Int -> Int -> Int
+daysInMonth y m | m == 1 && (y % 100 != 0 && y % 4 == 0 || y % 400 == 0) = 29
+                | otherwise = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31] !! m
 

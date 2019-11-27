@@ -55,25 +55,6 @@ function balance (transactions, year, month) {
   return initialBalance + nettoMonth;
 };
 
-function maximumBalance (transactions, year, month) {
-  const dailyBalances = cashFlow(transactions, year, month);
-  const maximum = dailyBalances.reduce((acc, start) => {
-    (acc.balance > start.balance)? acc : start;
-  }, dailyBalances[0]);
-  
-  return maximum;
-};
-
-function minimumBalance (transactions, year, month) {
-  // TODO
-  const dailyBalances = cashFlow(transactions, year, month);
-  const minimum = dailyBalances.reduce((acc, start) => {
-    (acc.balance < start.balance)? acc : start;
-  }, dailyBalances[0]);
-  
-  return minimum;
-};
-
 function averageIncome (transactions, year) {
   const filtered = transactions.filter(t => {
     return t.data.year == year &&
@@ -110,8 +91,33 @@ function averageNetIncome (transactions, year) {
 };
 
 function cashFlow (transactions, year, month) {
-  // TODO
+  const filtered = filterByMonth(transactions, year, month);
+  const ldm = lastDayOfMonth(year, month);
+  const cf = [];
+  cf[0] = {
+    day: 1,
+    balance: startingBalance(transactions, year, month) + dailyNetto(filtered, year, month, 1)
+  };
+  for (let i = 1; i < ldm + 1; i++) {
+    cf[i] = {
+      day: i + 1,
+      balance: cf[i - 1].balance + dailyNetto(filtered, year, month, i + 1)
+    };
+  };
+  return cf;
 };
+
+function maximumBalance (transactions, year, month) {
+  const dailyBalances = cashFlow(transactions, year, month);
+  const reducer = (acc, b) => (b.balance > acc.balance)? b : acc;
+  return dailyBalances.reduce(reducer, dailyBalances[0]);
+};
+
+function minimumBalance (transactions, year, month) {
+  const dailyBalances = cashFlow(transactions, year, month);
+  const reducer = (acc, b) => (b.balance < acc.balance)? b : acc;
+  return dailyBalances.reduce(reducer, dailyBalances[0]);
+}
 
 function startingBalance (transactions, year, month) {
   const result = transactions.find(t => {
@@ -134,7 +140,26 @@ function numberOfMonths (transactions, year) {
   return max + min + 1;
 };
 
-function lastDayOfMonth (year) 
+function lastDayOfMonth(year, month) {
+  let lastDay;
+  const months = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+  
+  if (month == '01' && (year % 100 != 0 && year % 4 == 0 || year % 400 == 0)) lastDay = 29;
+  else lastDay = months[parseInt(month)];
+  return lastDay;
+}
+
+function dailyNetto (transactions, year, month, day) {
+  const filtered = transactions.filter(t => {
+    return t.data.year == year &&
+      t.data.month == month &&
+      t.data.dayOfMonth == day &&
+      !t.tipos.includes('SALDO_CORRENTE') &&
+      !t.tipos.includes('APLICACAO') &&
+      !t.tipos.includes('VALOR_APLICACAO');
+  });
+  return filtered.reduce(((acc, t) => acc + t.valor), 0);
+}
 
 module.exports = {
   filterByYear,

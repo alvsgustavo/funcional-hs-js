@@ -1,7 +1,7 @@
 'use strict';
 
 const router = require('express').Router({ strict: true });
-const dataset = require('../../data/dataset.json');
+const dataset = require('../../../data/dataset.json');
 const fun = require('./function');
 
 const filterByYear = function (req, res) {
@@ -76,21 +76,21 @@ const cashFlow = function (req, res) {
   const year = req.params.year;
   const month = req.params.month;
   const result = fun.cashFlow(dataset, year, month);
-  res.send("To be implemented");
+  res.send(result);
 };
 
 const maximumBalance = function (req, res) {
   const year = req.params.year;
   const month = req.params.month;
   const result = fun.maximumBalance(dataset, year, month);
-  res.send("To be implemented");
+  res.send(result);
 };
 
-const maximumBalance = function (req, res) {
+const minimumBalance = function (req, res) {
   const year = req.params.year;
   const month = req.params.month;
   const result = fun.minimumBalance(dataset, year, month);
-  res.send("To be implemented");
+  res.send(result);
 };
 
 /*
@@ -105,7 +105,7 @@ router
   .get('/netIncome/:year/:month', netIncome)
   .get('/balance/:year/:month', balance)
   .get('/maximumBalance/:year/:month', maximumBalance)
-  .get('/minimumBalance/:year/:month', maximumBalance)
+  .get('/minimumBalance/:year/:month', minimumBalance)
   .get('/averageIncome/:year', averageIncome)
   .get('/averageExpense/:year', averageExpense)
   .get('/averageNetIncome/:year', averageNetIncome)
